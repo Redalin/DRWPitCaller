@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>Lane Pit Control</title>
+  <link rel="stylesheet" type="text/css" href="/style.css">
+  <link rel="icon" type="image/png" href="/favicon.png">
+</head>
+
+<body>
+  <div class="topnav">
+    <h1>DRW Pit Caller</h1>
+  </div>
+  <div id="lanes">
+    <div class="card" id="lane1">
+      <h2>Lane 1</h2>
+      <input type="text" class="pilotName" placeholder="Enter Pilot Name" oninput="updateLaneName(0, this.value)">
+      <button class="button" onclick="startPit(0)">Pit</button>
+    </div>
+    <div class="card" id="lane2">
+      <h2>Lane 2</h2>
+      <input type="text" class="pilotName" placeholder="Enter Pilot Name" oninput="updateLaneName(1, this.value)">
+      <button class="button" onclick="startPit(1)">Pit</button>
+    </div>
+    <div class="card" id="lane3">
+      <h2>Lane 3</h2>
+      <input type="text" class="pilotName" placeholder="Enter Pilot Name" oninput="updateLaneName(2, this.value)">
+      <button class="button" onclick="startPit(2)">Pit</button>
+    </div>
+    <div class="card" id="lane4">
+      <h2>Lane 4</h2>
+      <input type="text" class="pilotName" placeholder="Enter Pilot Name" oninput="updateLaneName(3, this.value)">
+      <button class="button" onclick="startPit(3)">Pit</button>
+    </div>
+  </div>
+  <script src="/script.js"></script>
+</body>
+
+</html>
