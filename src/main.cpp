@@ -73,7 +73,7 @@ void onEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventType 
 
 void checkLaneSwitches() {
   for (int i = 0; i < NUM_LANES; i++) {
-    if (digitalRead(lanePins[i]) == LOW) { // Assuming switch closes to ground
+    if (digitalRead(lanePins[i]) == HIGH) { // Assuming switch opens to high
       if (buttonStates[i].countdown == 0) { // Only trigger if not already in countdown
         buttonStates[i].countdown = 20;
         countdownTimers[i] = millis();

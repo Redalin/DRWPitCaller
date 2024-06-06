@@ -35,7 +35,7 @@ function updateUI(buttonStates) {
     var button = lane.getElementsByTagName('button')[0];
     var input = lane.getElementsByClassName('pilotName')[0];
     if (buttonStates[i].countdown > 0) {
-      button.innerHTML = buttonStates[i].countdown + 's';
+      button.innerHTML = buttonStates[i].countdown;
       button.disabled = true;
     } else {
       button.innerHTML = 'Pit';
