@@ -12,6 +12,7 @@ AsyncWebSocket ws("/ws");
 const uint8_t lanePins[NUM_LANES] = {D1, D2, D3, D4};
 unsigned long lastCheckTime = 0;
 unsigned long countdownTimers[NUM_LANES] = {0};
+int countdownTimer = 5;
 
 struct ButtonState {
   String label;
@@ -48,7 +49,7 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
     String message = (char*)data;
     if (message.startsWith("start")) {
       int lane = message.substring(5).toInt();
-      buttonStates[lane].countdown = 20;
+      buttonStates[lane].countdown = countdownTimer;
       countdownTimers[lane] = millis();
       notifyClients();
       announcePitting(lane);
@@ -75,7 +76,7 @@ void checkLaneSwitches() {
   for (int i = 0; i < NUM_LANES; i++) {
     if (digitalRead(lanePins[i]) == HIGH) { // Assuming switch opens to high
       if (buttonStates[i].countdown == 0) { // Only trigger if not already in countdown
-        buttonStates[i].countdown = 20;
+        buttonStates[i].countdown = countdownTimer;
         countdownTimers[i] = millis();
         notifyClients();
         announcePitting(i);
