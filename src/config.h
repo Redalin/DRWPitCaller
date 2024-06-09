@@ -7,5 +7,6 @@
 // Wifi network credentials
 const char* ssid = "ChrisnAimee.com";
 const char* password = "carbondell";
+const char* hostname = "pitcaller";
 
 #endif

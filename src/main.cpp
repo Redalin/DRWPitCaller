@@ -12,33 +12,38 @@ AsyncWebSocket ws("/ws");
 const uint8_t lanePins[NUM_LANES] = {D1, D2, D3, D4};
 unsigned long lastCheckTime = 0;
 unsigned long countdownTimers[NUM_LANES] = {0};
-int countdownTimer = 5;
+int countdownTimer = 3;
 
 struct ButtonState {
   String label;
   String pilotName;
   int countdown;
+  bool isPitting;
 };
 
 ButtonState buttonStates[NUM_LANES] = {
-  {"Lane 1", "", 0},
-  {"Lane 2", "", 0},
-  {"Lane 3", "", 0},
-  {"Lane 4", "", 0}
+  {"Lane 1", "", 0, false},
+  {"Lane 2", "", 0, false},
+  {"Lane 3", "", 0, false},
+  {"Lane 4", "", 0, false}
 };
 
 void notifyClients() {
   String message = "{\"type\":\"update\",\"data\":[";
   for (int i = 0; i < NUM_LANES; i++) {
-    message += "{\"label\":\"" + buttonStates[i].label + "\",\"pilotName\":\"" + buttonStates[i].pilotName + "\",\"countdown\":" + String(buttonStates[i].countdown) + "}";
+    // message += "{\"label\":\"" + buttonStates[i].label + "\",\"pilotName\":\"" + buttonStates[i].pilotName + "\",\"countdown\":" + String(buttonStates[i].countdown) + "}";
+    message += "{\"label\":\"" + buttonStates[i].label + "\",\"pilotName\":\"" + buttonStates[i].pilotName + "\",\"countdown\":" + String(buttonStates[i].countdown) + ",\"isPitting\":" + (buttonStates[i].isPitting ? "true" : "false") + "}";
+    
     if (i < NUM_LANES - 1) message += ",";
   }
   message += "]}";
   ws.textAll(message);
 }
 
-void announcePitting(int lane) {
-  String message = "{\"type\":\"announce\",\"lane\":" + String(lane) + ",\"pilotName\":\"" + buttonStates[lane].pilotName + "\"}";
+void announcePitting(int lane, bool isPitting) {
+  String message = "{\"type\":\"announce\",\"lane\":" + String(lane) + ",\"pilotName\":\"" + buttonStates[lane].pilotName + "\",\"isPitting\":" + (isPitting ? "true" : "false") + "}";
+  Serial.println("AnnouncePitting message is:");
+  Serial.println(message);
   ws.textAll(message);
 }
 
@@ -51,15 +56,15 @@ void handleWebSocketMessage(void *arg, uint8_t *data, size_t len) {
       int lane = message.substring(5).toInt();
       buttonStates[lane].countdown = countdownTimer;
       countdownTimers[lane] = millis();
-      notifyClients();
-      announcePitting(lane);
+      buttonStates[lane].isPitting = !buttonStates[lane].isPitting; // change the pitting flag
+      announcePitting(lane, buttonStates[lane].isPitting);
     } else if (message.startsWith("update")) {
       int lane = message.charAt(6) - '0';
       String name = message.substring(8);
       buttonStates[lane].pilotName = name;
       buttonStates[lane].label = "Lane " + String(lane + 1) + ": " + name;
-      notifyClients();
     }
+    notifyClients();
   }
 }
 
@@ -79,7 +84,8 @@ void checkLaneSwitches() {
         buttonStates[i].countdown = countdownTimer;
         countdownTimers[i] = millis();
         notifyClients();
-        announcePitting(i);
+        buttonStates[i].isPitting = !buttonStates[i].isPitting; // change the pitting flag for a button press
+        announcePitting(i, buttonStates[i].isPitting);
       }
     }
   }
@@ -87,13 +93,15 @@ void checkLaneSwitches() {
 
 void setup() {
   Serial.begin(115200);
-
+  
   if (!LittleFS.begin()) {
     Serial.println("An error has occurred while mounting LittleFS");
     return;
   }
   Serial.println("LittleFS mounted successfully");
 
+  WiFi.hostname(hostname);
+  Serial.printf("Hostname: %s\n", WiFi.hostname().c_str());
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);

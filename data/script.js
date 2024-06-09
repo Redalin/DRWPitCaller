@@ -19,12 +19,13 @@ function handleWebSocketMessage(message) {
   if (message.type === 'update') {
     updateUI(message.data);
   } else if (message.type === 'announce') {
-    announcePitting(message.lane, message.pilotName);
+    announcePitting(message.lane, message.pilotName, message.isPitting);
   }
 }
 
-function announcePitting(lane, pilotName) {
-  var utterance = new SpeechSynthesisUtterance("Lane " + (lane + 1) + " pilot " + pilotName + " is pitting");
+function announcePitting(lane, pilotName, isPitting) {
+  var text = isPitting ? "Lane " + (lane + 1) + " pilot " + pilotName + "  is pitting" : "Lane " + (lane + 1) + " pilot " + pilotName + " is leaving the pits";
+  var utterance = new SpeechSynthesisUtterance(text);
   speechSynthesis.speak(utterance);
 }
 
@@ -37,9 +38,14 @@ function updateUI(buttonStates) {
     if (buttonStates[i].countdown > 0) {
       button.innerHTML = buttonStates[i].countdown;
       button.disabled = true;
+    } else if (buttonStates[i].isPitting) {
+      button.innerHTML = 'Leave Pit';
+      button.disabled = false;
+      button.style.backgroundColor = 'purple';
     } else {
       button.innerHTML = 'Pit';
       button.disabled = false;
+      button.style.backgroundColor = ""
     }
     h2.textContent = "Lane " + (i + 1) + (buttonStates[i].pilotName ? ": " + buttonStates[i].pilotName : "");
     input.value = buttonStates[i].pilotName || '';
