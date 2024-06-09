@@ -9,7 +9,7 @@ AsyncWebServer server(80);
 AsyncWebSocket ws("/ws");
 
 #define NUM_LANES 4
-const uint8_t lanePins[NUM_LANES] = {D1, D2, D3, D4};
+const uint8_t lanePins[NUM_LANES] = {D5, D6, D7, D8};
 unsigned long lastCheckTime = 0;
 unsigned long countdownTimers[NUM_LANES] = {0};
 int countdownTimer = 3;
@@ -108,6 +108,8 @@ void setup() {
     Serial.println("Connecting to WiFi...");
   }
   Serial.println("Connected to WiFi");
+  Serial.print("IP address:\t");
+  Serial.println(WiFi.localIP());
 
   ws.onEvent(onEvent);
   server.addHandler(&ws);

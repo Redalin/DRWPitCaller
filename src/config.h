@@ -5,8 +5,8 @@
 #define CONFIG_H
 
 // Wifi network credentials
-const char* ssid = "ChrisnAimee.com";
-const char* password = "carbondell";
+const char* ssid = "DRW";
+const char* password = "wellington";
 const char* hostname = "pitcaller";
 
 #endif
