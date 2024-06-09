@@ -102,7 +102,39 @@ void setup() {
 
   WiFi.hostname(hostname);
   Serial.printf("Hostname: %s\n", WiFi.hostname().c_str());
-  WiFi.begin(ssid, password);
+
+  // Scan for known wifi Networks
+  boolean wifiFound = false;
+  int i, n;
+  Serial.println(F("scan start"));
+  int nbVisibleNetworks = WiFi.scanNetworks();
+  Serial.println(F("scan done"));
+  if (nbVisibleNetworks == 0) {
+    Serial.println(F("no networks found. Reset to try again"));
+    while (true); // no need to go further, hang in there, will auto launch the Soft WDT reset
+  }
+
+  // ----------------------------------------------------------------
+  // check if we recognize one by comparing the visible networks
+  // one by one with our list of known networks
+  // ----------------------------------------------------------------
+  for (i = 0; i < nbVisibleNetworks; ++i) {
+    Serial.println(WiFi.SSID(i)); // Print current SSID
+    for (n = 0; n < KNOWN_SSID_COUNT; n++) { // walk through the list of known SSID and check for a match
+      if (strcmp(KNOWN_SSID[n], WiFi.SSID(i).c_str())) {
+        Serial.print(F("\tNot matching "));
+        Serial.println(KNOWN_SSID[n]);
+      } else { // we got a match
+        wifiFound = true;
+        break; // n is the network index we found
+      }
+    } // end for each known wifi SSID
+    if (wifiFound) break; // break from the "for each visible network" loop
+  } // end for each visible network
+  Serial.print(F("\nConnecting to "));
+  Serial.println(KNOWN_SSID[n]);
+
+  WiFi.begin(KNOWN_SSID[n], KNOWN_PASSWORD[n]);
   while (WiFi.status() != WL_CONNECTED) {
     delay(1000);
     Serial.println("Connecting to WiFi...");
