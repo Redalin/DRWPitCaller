@@ -1,5 +1,6 @@
 #include <LittleFS.h>
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 #include <ESPAsyncWebServer.h>
 #include <ESPAsyncTCP.h>
 #include <AsyncWebSocket.h>
@@ -142,6 +143,11 @@ void setup() {
   Serial.println("Connected to WiFi");
   Serial.print("IP address:\t");
   Serial.println(WiFi.localIP());
+
+  if (!MDNS.begin(hostname)) {             // Start the mDNS responder for pitcaller so it can be recognised by name on the network
+    Serial.println("Error setting up MDNS responder!");
+  }
+  Serial.println("mDNS responder started");
 
   ws.onEvent(onEvent);
   server.addHandler(&ws);
