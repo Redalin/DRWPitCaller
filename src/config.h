@@ -12,4 +12,8 @@ const char* KNOWN_SSID[] = {"DRW", "ChrisnAimee.com"};
 const char* KNOWN_PASSWORD[] = {"wellington", "carbondell"};
 const int   KNOWN_SSID_COUNT = sizeof(KNOWN_SSID) / sizeof(KNOWN_SSID[0]); // number of known networks
 
+// If we are hosting our own Wifi these are the credentials
+const char* AP_SSID = "DRW"; 
+const char* AP_PASSWORD = "wellington";
+
 #endif

@@ -14,6 +14,7 @@ const uint8_t lanePins[NUM_LANES] = {D5, D6, D7, D8};
 unsigned long lastCheckTime = 0;
 unsigned long countdownTimers[NUM_LANES] = {0};
 int countdownTimer = 3;
+int visibleNetworks = 0;
 
 struct ButtonState {
   String label;
@@ -92,6 +93,62 @@ void checkLaneSwitches() {
   }
 }
 
+void scanForWifi() {
+  Serial.println(F("WiFi scan start"));
+  visibleNetworks = WiFi.scanNetworks();
+  Serial.println(F("WiFi scan done"));
+}
+
+void connectToWifi() {
+  int i, n;
+  bool wifiFound = false;
+  Serial.println(F("Found the following networks:"));
+  for (i = 0; i < visibleNetworks; ++i) {
+    Serial.println(WiFi.SSID(i));
+  }
+  // ----------------------------------------------------------------
+  // check if we recognize one by comparing the visible networks
+  // one by one with our list of known networks
+  // ----------------------------------------------------------------
+  for (i = 0; i < visibleNetworks; ++i) {
+    Serial.print(F("Checking: "));
+    Serial.println(WiFi.SSID(i)); // Print current SSID
+    for (n = 0; n < KNOWN_SSID_COUNT; n++) { // walk through the list of known SSID and check for a match
+      if (strcmp(KNOWN_SSID[n], WiFi.SSID(i).c_str())) {
+        Serial.print(F("\tNot matching "));
+        Serial.println(KNOWN_SSID[n]);
+      } else { // we got a match
+        wifiFound = true;
+        break; // n is the network index we found
+      }
+    } // end for each known wifi SSID
+    if (wifiFound) break; // break from the "for each visible network" loop
+  } // end for each visible network
+  if (wifiFound) {
+    Serial.print(F("\nConnecting to "));
+    Serial.println(KNOWN_SSID[n]);
+
+    WiFi.begin(KNOWN_SSID[n], KNOWN_PASSWORD[n]);
+    while (WiFi.status() != WL_CONNECTED) {
+      delay(1000);
+      Serial.println("Connecting to WiFi...");
+    }
+    Serial.println("Connected to WiFi");
+    Serial.print("IP address:\t");
+    Serial.println(WiFi.localIP());
+  } else {
+    // We don't have WiFi, lets create our own
+    WiFi.softAP(AP_SSID, AP_PASSWORD);
+
+    IPAddress IP = WiFi.softAPIP();
+    Serial.print("Creating local Wifi. IP address: ");
+    Serial.println(IP);
+
+    // Print ESP8266 Local IP Address
+    Serial.println(WiFi.localIP());
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   
@@ -105,46 +162,16 @@ void setup() {
   Serial.printf("Hostname: %s\n", WiFi.hostname().c_str());
 
   // Scan for known wifi Networks
-  boolean wifiFound = false;
-  int i, n;
-  Serial.println(F("scan start"));
-  int nbVisibleNetworks = WiFi.scanNetworks();
-  Serial.println(F("scan done"));
-  if (nbVisibleNetworks == 0) {
+  
+  scanForWifi();
+  if(visibleNetworks > 0) {
+    connectToWifi();
+  } else {
     Serial.println(F("no networks found. Reset to try again"));
     while (true); // no need to go further, hang in there, will auto launch the Soft WDT reset
   }
 
-  // ----------------------------------------------------------------
-  // check if we recognize one by comparing the visible networks
-  // one by one with our list of known networks
-  // ----------------------------------------------------------------
-  for (i = 0; i < nbVisibleNetworks; ++i) {
-    Serial.println(WiFi.SSID(i)); // Print current SSID
-    for (n = 0; n < KNOWN_SSID_COUNT; n++) { // walk through the list of known SSID and check for a match
-      if (strcmp(KNOWN_SSID[n], WiFi.SSID(i).c_str())) {
-        Serial.print(F("\tNot matching "));
-        Serial.println(KNOWN_SSID[n]);
-      } else { // we got a match
-        wifiFound = true;
-        break; // n is the network index we found
-      }
-    } // end for each known wifi SSID
-    if (wifiFound) break; // break from the "for each visible network" loop
-  } // end for each visible network
-  Serial.print(F("\nConnecting to "));
-  Serial.println(KNOWN_SSID[n]);
-
-  WiFi.begin(KNOWN_SSID[n], KNOWN_PASSWORD[n]);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
-    Serial.println("Connecting to WiFi...");
-  }
-  Serial.println("Connected to WiFi");
-  Serial.print("IP address:\t");
-  Serial.println(WiFi.localIP());
-
-  if (!MDNS.begin(hostname)) {             // Start the mDNS responder for pitcaller so it can be recognised by name on the network
+  if (!MDNS.begin(hostname)) {             // Start the mDNS responder for 'hostname' so it can be recognised by name on the network
     Serial.println("Error setting up MDNS responder!");
   }
   Serial.println("mDNS responder started");
@@ -160,7 +187,6 @@ void setup() {
   });
 
   server.serveStatic("/", LittleFS, "/");
-
   server.begin();
 
   for (int i = 0; i < NUM_LANES; i++) {

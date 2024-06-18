@@ -23,6 +23,19 @@ function handleWebSocketMessage(message) {
   }
 }
 
+// hack to force IOS devices to play audio on an event
+let hasEnabledVoice = false;
+
+document.addEventListener('click', () => {
+  if (hasEnabledVoice) {
+    return;
+  }
+  const lecture = new SpeechSynthesisUtterance('hello');
+  lecture.volume = 0;
+  speechSynthesis.speak(lecture);
+  hasEnabledVoice = true;
+});
+
 function announcePitting(lane, pilotName, isPitting) {
   var text = isPitting ? "Lane " + (lane + 1) + " pilot " + pilotName + "  is pitting" : "Lane " + (lane + 1) + " pilot " + pilotName + " is leaving the pits";
   var utterance = new SpeechSynthesisUtterance(text);
